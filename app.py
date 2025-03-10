@@ -5,11 +5,11 @@ from agno.vectordb.lancedb import LanceDb
 from agno.embedder.google import GeminiEmbedder
 from agno.models.google import Gemini
 import os
-from agno.vectordb.search import SearchType
 import requests
 import pdfplumber
 from pdf2image import convert_from_bytes
 from PIL import Image, ImageEnhance
+from agno.vectordb.search import SearchType
 import io
 import pytesseract
 import logging
@@ -70,18 +70,7 @@ def extract_pdf_content(pdf_url):
 # Enhanced WebsiteKnowledgeBase with broader PDF detection and processing
 class EnhancedWebsiteKnowledgeBase(WebsiteKnowledgeBase):
     def process_url(self, url, visited_urls=None, depth=0):
-        if visited_urls is None:
-            visited_urls = set()
-        
-        if url in visited_urls:
-            logger.info(f"Skipping already processed URL: {url}")
-            return
-        if depth > self.max_depth:
-            logger.info(f"Max depth {self.max_depth} exceeded for {url}")
-            return
-
-        visited_urls.add(url)
-
+        # Removed visited_urls and depth checks as per request
         # Check if URL contains ".pdf" anywhere (not just at the end)
         if ".pdf" in url.lower():
             logger.info(f"Processing PDF: {url}")
@@ -103,7 +92,7 @@ class EnhancedWebsiteKnowledgeBase(WebsiteKnowledgeBase):
                                if ".pdf" in a["href"].lower()]
                     for pdf_link in pdf_links:
                         absolute_url = self._make_absolute_url(url, pdf_link)
-                        self.process_url(absolute_url, visited_urls, depth + 1)
+                        self.process_url(absolute_url)  # No visited_urls or depth passed
                     
                     # Process normal page content
                     self._extract_and_store_content(url, soup)
@@ -118,20 +107,6 @@ class EnhancedWebsiteKnowledgeBase(WebsiteKnowledgeBase):
             texts=[content],
             metadatas=[{"source": url, "content_type": "pdf" if ".pdf" in url.lower() else "html"}]
         )
-
-    def load(self, recreate=False):
-        logger.info("Loading knowledge base")
-        visited_urls = set()
-        if recreate:
-            try:
-                db_connection = self.vector_db._connection
-                db_connection.drop_table(self.vector_db.table_name)
-                logger.info(f"Dropped existing table '{self.vector_db.table_name}'")
-            except Exception as e:
-                logger.warning(f"Could not drop table (might not exist): {e}")
-        
-        for url in self.urls:
-            self.process_url(url, visited_urls)
 
 # Initialize the embedder
 embedder = GeminiEmbedder(id="models/text-embedding-004", dimensions=768, api_key=api_key)
@@ -174,7 +149,7 @@ agent = Agent(
     ]
 )
 
-# Load the knowledge base
+# Load the knowledge base using the default load method
 try:
     logger.info("Loading knowledge base...")
     website_kb.load(recreate=True)  # Use True to rebuild with new data
