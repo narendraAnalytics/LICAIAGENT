@@ -148,8 +148,8 @@ knowledge_base = EnhancedWebsiteKnowledgeBase(
         "https://licindia.in/documents/20121/1256234/102259+LIC_Linked+Accident+Benefit+Rider+Sales+Brochure_OCT+24.pdf/30b31c1c-fc8d-5f78-45a7-9b6b07e9c7f6?t=1729168072699"
         ],
     vector_db=vector_db,
-    max_links=100,  # Increased
-    max_depth=4, #increased
+    max_links=50,  # Increased
+    max_depth=3, #increased
     name="LIC India Website",
     instructions=[
         "Prioritize PDF processing for policy documents",
