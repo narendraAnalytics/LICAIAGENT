@@ -14,8 +14,8 @@ import io
 import pytesseract
 import logging
 from urllib.parse import urljoin
+from bs4 import BeautifulSoup
 from dotenv import load_dotenv
-from bs4 import BeautifulSoup  # Added for custom HTML parsing
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -68,10 +68,10 @@ def extract_pdf_content(pdf_url):
         logger.error(f"PDF processing error for {pdf_url}: {str(e)}")
         return f"Error processing PDF: {str(e)}"
 
-# Enhanced WebsiteKnowledgeBase with broader PDF detection and product link following
+# Enhanced WebsiteKnowledgeBase with improved product and PDF link following
 class EnhancedWebsiteKnowledgeBase(WebsiteKnowledgeBase):
     def process_url(self, url):
-        # Check if URL contains ".pdf" anywhere (not just at the end)
+        # Check if URL contains ".pdf" anywhere
         if ".pdf" in url.lower():
             logger.info(f"Processing PDF: {url}")
             try:
@@ -85,7 +85,8 @@ class EnhancedWebsiteKnowledgeBase(WebsiteKnowledgeBase):
                 logger.error(f"Failed to process PDF {url}: {str(e)}")
         else:
             try:
-                soup = self._get_page_content(url)
+                response = requests.get(url)
+                soup = BeautifulSoup(response.text, 'html.parser')
                 if soup:
                     # Log all links for debugging
                     links = soup.find_all("a", href=True)
@@ -94,13 +95,12 @@ class EnhancedWebsiteKnowledgeBase(WebsiteKnowledgeBase):
                         href = link.get("href")
                         absolute_url = self._make_absolute_url(url, href)
                         logger.info(f"Considering link: {absolute_url}")
-                        # Specifically target product name links (e.g., in a table)
-                        if self._is_product_link(soup, link):
-                            logger.info(f"Following product link: {absolute_url}")
-                            self.process_url(absolute_url)
-                        # Process PDF links
-                        elif ".pdf" in href.lower():
-                            logger.info(f"Following PDF link: {absolute_url}")
+                        # Follow product name links and PDF links
+                        if self._is_product_link(soup, link) or ".pdf" in href.lower():
+                            # Additional check for PDF links labeled "Sales Brochure"
+                            if "sales brochure" in link.get_text(strip=True).lower():
+                                logger.info(f"Prioritizing Sales Brochure PDF link: {absolute_url}")
+                            logger.info(f"Following link: {absolute_url}")
                             self.process_url(absolute_url)
                     
                     # Process normal page content
@@ -112,15 +112,19 @@ class EnhancedWebsiteKnowledgeBase(WebsiteKnowledgeBase):
         return urljoin(base_url, link)
 
     def _is_product_link(self, soup, link):
-        # Custom logic to identify product name links (e.g., within a table)
-        # Adjust this based on the actual HTML structure
+        # Improved logic to identify product name links within a table
         parent_table = link.find_parent("table")
         if parent_table:
-            # Check if the link is within a "Product Name" column (approximate by column index or class)
-            cells = parent_table.find_all("td")
-            for i, cell in enumerate(cells):
-                if cell == link.parent and ("product" in cell.get_text(lower=True) or i == 0):  # Assuming first column is Product Name
+            # Check if the link is in the "Product Name" column (first column by index)
+            parent_row = link.find_parent("tr")
+            if parent_row:
+                cells = parent_row.find_all("td")
+                if cells and cells[0] == link.parent:  # First column is Product Name
                     return True
+            # Alternative: Check for specific text in the link
+            link_text = link.get_text(strip=True).lower()
+            if "lic" in link_text and any(keyword in link_text for keyword in ["plan", "endowment", "premium"]):
+                return True
         return False
 
     def add_document(self, url, content):
@@ -136,7 +140,7 @@ embedder = GeminiEmbedder(id="models/text-embedding-004", dimensions=768, api_ke
 website_kb = EnhancedWebsiteKnowledgeBase(
     urls=["https://licindia.in/web/guest/home"],
     max_links=50,
-    max_depth=5,  # Increased to ensure deeper navigation
+    max_depth=10,  # Increased to ensure navigation to product pages and PDFs
     vector_db=LanceDb(
         table_name="website_documents",
         uri="tmp/lancedb",
@@ -150,7 +154,7 @@ website_kb = EnhancedWebsiteKnowledgeBase(
         "Capture surrender value calculations and bonus declarations",
         "Process all discovered PDFs recursively",
         "Maintain source URLs for reference",
-        "Follow links to individual product pages for detailed data"
+        "Follow links to individual product pages and their associated PDFs for detailed data"
     ]
 )
 
