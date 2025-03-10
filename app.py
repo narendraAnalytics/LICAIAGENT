@@ -139,7 +139,6 @@ embedder = GeminiEmbedder(id="models/text-embedding-004", dimensions=768, api_ke
 # Create Enhanced Website knowledge base with the LIC URL
 website_kb = EnhancedWebsiteKnowledgeBase(
     urls=[
-        "https://licindia.in/web/guest/home",
         "https://licindia.in/web/guest/endowment-plans"
     ],
     max_links=50,
