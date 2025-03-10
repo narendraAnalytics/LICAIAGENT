@@ -117,10 +117,10 @@ website_kb = EnhancedWebsiteKnowledgeBase(
         "https://licindia.in/web/guest/home",
         "https://licindia.in/documents/20121/1256234/102259+LIC_Linked+Accident+Benefit+Rider+Sales+Brochure_OCT+24.pdf/30b31c1c-fc8d-5f78-45a7-9b6b07e9c7f6?t=1729168072699"
     ],
-    max_links=50,
-    max_depth=3,
+    max_links=60,
+    max_depth=6,
     vector_db=LanceDb(
-        table_name="website_documents",
+        table_name="lic_documents",
         uri="tmp/lancedb",
         search_type=SearchType.vector,
         embedder=embedder,
