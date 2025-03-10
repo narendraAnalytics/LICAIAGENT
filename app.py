@@ -139,10 +139,10 @@ embedder = GeminiEmbedder(id="models/text-embedding-004", dimensions=768, api_ke
 # Create Enhanced Website knowledge base with the LIC URL
 website_kb = EnhancedWebsiteKnowledgeBase(
     urls=[
-        "https://licindia.in/web/guest/endowment-plans"
+        "https://licindia.in/web/guest/lic-s-single-premium-endowment-plan-717-512n283v03"
     ],
-    max_links=50,
-    max_depth=10,  # Increased to ensure navigation to product pages and PDFs
+    max_links=3,
+    max_depth=4,  # Increased to ensure navigation to product pages and PDFs
     vector_db=LanceDb(
         table_name="website_documents",
         uri="tmp/lancedb",
