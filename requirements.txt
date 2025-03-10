@@ -30,3 +30,4 @@ pdf2image
 PyMuPDF
 requests
 pdfplumber
+chardet
