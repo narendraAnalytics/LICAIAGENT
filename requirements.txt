@@ -1,33 +1,22 @@
-agno==1.1.3
-python-dotenv
-streamlit
+# Core dependencies for the agent and LLM
+langchain-google-genai
+google-ai-generativelanguage
 google-generativeai
-pydantic
-duckduckgo-search
-lancedb
-bs4
-lxml_html_clean
-PyPDF2
-tiktoken
-pypdf
-yfinance
-groq
-newspaper4k
-googlesearch-python
-pycountry
-exa-py
-pillow
-opencv-python-headless
-opensearch-py
-aiohttp
-googletrans
-httpx
-google-genai
-google-api-python-client
-plotly
-pytesseract
-pdf2image
-PyMuPDF
-requests
-pdfplumber
-chardet
+pydantic  # Compatible version for structured output
+
+# Browser automation with Playwright
+playwright # Latest stable as of Oct 2024, adjust if needed
+
+# Streamlit for the UI
+streamlit  # Latest stable as of Oct 2024
+
+# Asyncio helper for Streamlit compatibility
+nest_asyncio==1.6.0
+
+# Environment variable management
+python-dotenv
+
+# browser_use (assuming it's a custom or local package, not on PyPI)
+# If it's on PyPI, uncomment and specify the version:
+# browser_use==x.x.x
+# If it's local, install it manually or via git (e.g., git+URL)
